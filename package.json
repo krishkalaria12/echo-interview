@@ -1,0 +1,23 @@
+{
+  "name": "echo-interview",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "py:install": "turbo run py:install",
+    "py:test": "turbo run py:test",
+    "py:lint": "turbo run py:lint",
+    "py:type-check": "turbo run py:type-check"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}

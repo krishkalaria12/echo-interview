@@ -1,0 +1,57 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        "dist/**", 
+        "build/**", 
+        ".next/**", 
+        "!.next/cache/**",
+        "__pycache__/**",
+        "*.pyc"
+      ]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        "coverage/**",
+        ".coverage",
+        "htmlcov/**",
+        ".pytest_cache/**"
+      ]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "py:install": {
+      "cache": true,
+      "outputs": ["venv/**", ".venv/**"]
+    },
+    "py:test": {
+      "dependsOn": ["py:install"],
+      "outputs": [
+        "coverage/**",
+        ".coverage",
+        "htmlcov/**",
+        ".pytest_cache/**"
+      ]
+    },
+    "py:lint": {
+      "dependsOn": ["py:install"],
+      "outputs": []
+    },
+    "py:type-check": {
+      "dependsOn": ["py:install"],
+      "outputs": [".mypy_cache/**"]
+    }
+  }
+}
