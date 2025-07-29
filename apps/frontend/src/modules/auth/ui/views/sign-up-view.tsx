@@ -1,7 +1,8 @@
 "use client";
 
 import { z } from "zod";
-import { Loader2, OctagonAlertIcon } from "lucide-react";
+import { OctagonAlertIcon } from "lucide-react";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
@@ -65,7 +66,30 @@ export const SignUpView = () => {
             },
             {
                 onSuccess: () => {
+                    setError(null);
                     router.push("/");
+                },
+                onError: ({ error }) => {
+                    setError(error.message);
+                },
+                onSettled: () => {
+                    setIsPending(false);
+                },
+            }
+        )
+    };
+
+    const handleSocialSignUp = async (provider: "google" | "github") => {
+        setError(null);
+        setIsPending(true);
+        await authClient.signIn.social(
+            {
+                provider,
+                callbackURL: "/",
+            },
+            {
+                onSuccess: () => {
+                    setError(null);
                 },
                 onError: ({ error }) => {
                     setError(error.message);
@@ -186,14 +210,7 @@ export const SignUpView = () => {
                                 className="w-full"
                                 disabled={isPending}
                             >
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <span className="sr-only ml-3">Signing up...</span>
-                                    </>
-                                ) : (
-                                    "Sign up"
-                                )}
+                                {isPending ? "Signing up..." : "Sign up"}
                             </Button>
                             <div 
                                 className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -202,11 +219,27 @@ export const SignUpView = () => {
                                 </span>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <Button variant="outline" type="button" className="w-full">
+                                <Button 
+                                    variant="outline" 
+                                    type="button" 
+                                    className="w-full"
+                                    onClick={() => {
+                                        handleSocialSignUp("google");
+                                    }}
+                                >
+                                    <FaGoogle className="mr-2" />
                                     Google
                                 </Button>
-                                <Button variant="outline" type="button" className="w-full">
-                                    Apple
+                                <Button 
+                                    variant="outline" 
+                                    type="button" 
+                                    className="w-full"
+                                    onClick={() => {
+                                        handleSocialSignUp("github");
+                                    }}
+                                >
+                                    <FaGithub className="mr-2" />
+                                    Github
                                 </Button>
                             </div>
                             <div className="text-center text-sm">
