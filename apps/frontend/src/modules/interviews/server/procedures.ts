@@ -1,6 +1,7 @@
 import { and, count, desc, eq, getTableColumns, ilike } from "drizzle-orm";
 import { z } from "zod";
 
+import { interviewInsertSchema, interviewUpdateSchema } from "@/modules/interviews/schemas";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from "@/lib/constants";
 import { db } from "@/db";
 import { interviews } from "@/db/schemas";
@@ -8,26 +9,60 @@ import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 
 export const interviewsRouter = createTRPCRouter({
-  getOne: protectedProcedure
-    .input(z.object({ id: z.string()}))
-    .query(async ({ ctx, input }) => {
-        const [existingInterview] = await db
-            .select({
-                ...getTableColumns(interviews)
-            })
-            .from(interviews)
-            .where(
-                and(
-                    eq(interviews.id, input.id),
-                    eq(interviews.userId, ctx.auth.user.id)
+    update: protectedProcedure
+        .input(interviewUpdateSchema)
+        .mutation(async ({ ctx, input }) => {
+            const [interview] = await db
+                .update(interviews)
+                .set(input)
+                .where(
+                    and(
+                        eq(interviews.id, input.id),
+                        eq(interviews.userId, ctx.auth.user.id)
+                    )
                 )
-            )
-        if (!existingInterview) {
-            throw new TRPCError({ code: "NOT_FOUND", message: "Interview not found" });
-        }
+                .returning();
+            
+            if (!interview) {
+                throw new TRPCError({ code: "NOT_FOUND", message: "Interview not found" });
+            }
 
-        return existingInterview;
-    }),
+            return interview;
+        }),
+    create: protectedProcedure
+        .input(interviewInsertSchema)
+        .mutation(async ({ ctx, input }) => {
+            const [interview] = await db
+                .insert(interviews)
+                .values({
+                ...input,
+                userId: ctx.auth.user.id,
+            }).returning();
+
+            // TODO: Create stream call
+
+            return interview;
+        }),
+    getOne: protectedProcedure
+        .input(z.object({ id: z.string()}))
+        .query(async ({ ctx, input }) => {
+            const [existingInterview] = await db
+                .select({
+                    ...getTableColumns(interviews)
+                })
+                .from(interviews)
+                .where(
+                    and(
+                        eq(interviews.id, input.id),
+                        eq(interviews.userId, ctx.auth.user.id)
+                    )
+                )
+            if (!existingInterview) {
+                throw new TRPCError({ code: "NOT_FOUND", message: "Interview not found" });
+            }
+
+            return existingInterview;
+        }),
     getMany: protectedProcedure
         .input(
             z.object({
