@@ -77,7 +77,6 @@ export const InterviewForm = ({
       jobDescription: initialValues?.jobDescription ?? "",
       experienceLevel: initialValues?.experienceLevel ?? "junior",
       interviewType: initialValues?.interviewType ?? "technical",
-      duration: initialValues?.duration ?? 30,
       scheduledFor: initialValues?.scheduledFor ? new Date(initialValues.scheduledFor) : undefined,
       resumeUrl: initialValues?.resumeUrl ?? "",
       portfolioUrl: initialValues?.portfolioUrl ?? "",
@@ -199,26 +198,6 @@ export const InterviewForm = ({
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duration (minutes)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="30" 
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <FormField
             control={form.control}

@@ -47,7 +47,6 @@ export const interviews = pgTable("interviews", {
   jobDescription: text("job_description"),
   experienceLevel: experienceLevel("experience_level").notNull(),
   interviewType: interviewType("interview_type").notNull().default("technical"),
-  duration: integer("duration").notNull().default(30), // minutes
   scheduledFor: timestamp("scheduled_for"),
   
   // Candidate Information

@@ -13,7 +13,6 @@ export const interviewInsertSchema = z.object({
     jobDescription: z.string().optional(),
     experienceLevel: z.enum(["junior", "mid", "senior"] as const satisfies readonly ExperienceLevel[]),
     interviewType: z.enum(["technical", "behavioral", "system_design", "mixed"] as const satisfies readonly InterviewType[]).default("technical"),
-    duration: z.number().int().min(15).max(180).default(30), // 15 mins to 3 hours
     scheduledFor: z.date().optional(),
     
     // Candidate Information
@@ -31,8 +30,6 @@ export const interviewUpdateSchema = interviewInsertSchema
       position: z.string().min(1, { message: "Position is required" }).optional(),
       experienceLevel: z.enum(["junior", "mid", "senior"] as const satisfies readonly ExperienceLevel[]).optional(),
       interviewType: z.enum(["technical", "behavioral", "system_design", "mixed"] as const satisfies readonly InterviewType[]).optional(),
-      duration: z.number().int().min(15).max(180).optional(),
-      resumeUrl: z.string().url().optional(),
       
       // Additional fields for updates
       status: z.enum(["upcoming", "active", "completed", "processing", "cancelled"] as const satisfies readonly InterviewStatus[]).optional(),
