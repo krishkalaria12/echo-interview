@@ -1,4 +1,4 @@
-import { and, count, desc, eq, getTableColumns, ilike } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { interviewInsertSchema, interviewUpdateSchema } from "@/modules/interviews/schemas";
@@ -81,7 +81,8 @@ export const interviewsRouter = createTRPCRouter({
             
             const data = await db
                 .select({
-                    ...getTableColumns(interviews)
+                    ...getTableColumns(interviews),
+                    duration: sql<number>`EXTRACT(EPOCH FROM ("ended_at" - "started_at"))`.as("duration")
                 })
                 .from(interviews)
                 .where(

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 
-import { NewInterviewDialog } from "@/modules/interviews/components/new-interview-dialog";
+import { NewInterviewDialog } from "@/modules/interviews/ui/components/new-interview-dialog";
 import { Button } from "@/components/ui/button";
 
 export const InterviewsListHeader = () => {

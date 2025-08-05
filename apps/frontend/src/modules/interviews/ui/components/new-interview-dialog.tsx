@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 
 import { ResponsiveDialog } from "@/components/responsive-dialog";
-import { InterviewForm } from "@/modules/interviews/components/interview-form";
+import { InterviewForm } from "@/modules/interviews/ui/components/interview-form";
 
 interface NewInterviewDialogProps {
   open: boolean;
