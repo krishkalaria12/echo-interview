@@ -7,9 +7,30 @@ import { db } from "@/db";
 import { interviews } from "@/db/schemas";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
-import { InterviewStatus } from "../types";
+import { InterviewStatus } from "@/modules/interviews/types";
 
 export const interviewsRouter = createTRPCRouter({
+    remove: protectedProcedure
+        .input(z.object({
+            id: z.string(),
+        }))
+        .mutation(async ({ ctx, input }) => {
+            const [removedInterview] = await db
+                .delete(interviews)
+                .where(
+                    and(
+                        eq(interviews.id, input.id),
+                        eq(interviews.userId, ctx.auth.user.id)
+                    )
+                )
+                .returning();
+            
+            if (!removedInterview) {
+                throw new TRPCError({ code: "NOT_FOUND", message: "Interview not found" });
+            }
+
+            return removedInterview;
+        }),
     update: protectedProcedure
         .input(interviewUpdateSchema)
         .mutation(async ({ ctx, input }) => {

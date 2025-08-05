@@ -42,6 +42,7 @@ export const InterviewForm = ({
         await queryClient.invalidateQueries(
           trpc.interviews.getMany.queryOptions({})
         );
+        toast.success("Interview created successfully");
         onSuccess?.(data.id);
       },
       onError: (error) => {
@@ -61,6 +62,7 @@ export const InterviewForm = ({
             trpc.interviews.getOne.queryOptions({ id: initialValues.id })
           );
         }
+        toast.success("Interview updated successfully");
         onSuccess?.(data.id);
       },
       onError: (error) => {
