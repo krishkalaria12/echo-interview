@@ -6,8 +6,8 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
 import { getQueryClient, trpc } from "@/trpc/server";
 import { InterviewsView, InterviewsViewError, InterviewsViewLoading } from "@/modules/interviews/ui/views/interviews-view"
-import { InterviewsListHeader } from "@/modules/interviews/components/interviews-list-header";
 import { auth } from "@/lib/auth";
+import { InterviewsListHeader } from "@/modules/interviews/ui/components/interviews-list-header";
 
 const InterviewPage = async () => {
   const session = await auth.api.getSession({
