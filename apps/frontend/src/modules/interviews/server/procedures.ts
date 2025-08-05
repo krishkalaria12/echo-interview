@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { interviews } from "@/db/schemas";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
+import { InterviewStatus } from "../types";
 
 export const interviewsRouter = createTRPCRouter({
     update: protectedProcedure
@@ -73,10 +74,11 @@ export const interviewsRouter = createTRPCRouter({
                     .max(MAX_PAGE_SIZE)
                     .default(DEFAULT_PAGE_SIZE),
                 search: z.string().nullish(),
+                status: z.enum(Object.values(InterviewStatus)).nullish(),
             })
         )
         .query(async ({ ctx, input }) => {
-            const { page, pageSize, search } = input;
+            const { page, pageSize, search, status } = input;
             const offset = (page - 1) * pageSize;
             
             const data = await db
@@ -88,7 +90,8 @@ export const interviewsRouter = createTRPCRouter({
                 .where(
                     and(
                         eq(interviews.userId, ctx.auth.user.id),
-                        search ? ilike(interviews.name, `%${search}%`) : undefined
+                        search ? ilike(interviews.name, `%${search}%`) : undefined,
+                        status ? eq(interviews.status, status) : undefined
                     )
                 )
                 .orderBy(desc(interviews.createdAt))
@@ -102,7 +105,8 @@ export const interviewsRouter = createTRPCRouter({
                 .where(
                     and(
                         eq(interviews.userId, ctx.auth.user.id),
-                        search ? ilike(interviews.name, `%${search}%`) : undefined
+                        search ? ilike(interviews.name, `%${search}%`) : undefined,
+                        status ? eq(interviews.status, status) : undefined
                     )
                 )
             
