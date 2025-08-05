@@ -48,9 +48,7 @@ export const InterviewIdView = ({ interviewId }: Props) => {
 
     if (!ok) return;
 
-    if (ok) {
-      removeInterview.mutate({ id: interviewId });
-    }
+    removeInterview.mutate({ id: interviewId });
   }
 
   return (
