@@ -4,12 +4,36 @@ import { z } from "zod";
 import { interviewInsertSchema, interviewUpdateSchema } from "@/modules/interviews/schemas";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from "@/lib/constants";
 import { db } from "@/db";
-import { interviews } from "@/db/schemas";
+import { agents, interviews } from "@/db/schemas";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { InterviewStatus } from "@/modules/interviews/types";
+import { generateAvatarUri } from "@/lib/avatar";
+import { streamVideo } from "@/lib/stream-video";
+import generateInterviewSystemPrompt from "@/lib/system-prompt";
 
 export const interviewsRouter = createTRPCRouter({
+    generateToken: protectedProcedure.mutation(async ({ ctx }) => {
+        await streamVideo.upsertUsers([
+            {
+                id: ctx.auth.user.id,
+                name: ctx.auth.user.name,
+                role: "admin",
+                image: ctx.auth.user.image ?? generateAvatarUri({ seed: ctx.auth.user.name, variant: "initials" }),
+            },
+        ]);
+
+        const expirationTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+        const issuedAt = Math.floor(Date.now() / 1000) - 60; // issuedAt
+
+        const token = streamVideo.generateUserToken({
+            user_id: ctx.auth.user.id,
+            exp: expirationTime,
+            validity_in_seconds: issuedAt,
+        });
+
+        return token;
+    }),
     remove: protectedProcedure
         .input(z.object({
             id: z.string(),
@@ -62,6 +86,48 @@ export const interviewsRouter = createTRPCRouter({
             }).returning();
 
             // TODO: Create stream call
+            const call = streamVideo.video.call("default", interview.id);
+            await call.create({
+                data: {
+                    created_by_id: ctx.auth.user.id,
+                    custom: {
+                        meetingId: interview.id,
+                        meetingName: interview.name,
+                    },
+                    settings_override: {
+                        transcription: {
+                            language: "en",
+                            mode: "auto-on",
+                            closed_caption_mode: "auto-on",
+                        },
+                        recording: {
+                            mode: "auto-on",
+                            quality: "1080p"
+                        }
+                    }
+                }
+            });
+
+            // create the agent for the call
+            const [createdAgent] = await db.insert(agents).values({
+                name: `Interview Agent for ${interview.name}`,
+                userId: ctx.auth.user.id,
+                instructions: generateInterviewSystemPrompt({
+                    interview,
+                    candidateName: interview.name,
+                    interviewerName: interview.name,
+                }),
+            }).returning();
+
+            // add the agent to the call
+            await streamVideo.upsertUsers([
+                {
+                    id: createdAgent.id,
+                    name: createdAgent.name,
+                    role: "user",
+                    image: generateAvatarUri({ seed: createdAgent.name, variant: "botttsNeutral" }),
+                }
+            ])
 
             return interview;
         }),

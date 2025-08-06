@@ -24,7 +24,7 @@ export const UpcomingState = ({ interviewId, onCancelInterview, isCancelling }: 
                 Cancel Interview
             </Button>
             <Button asChild className="w-full lg:w-auto">
-                <Link href={`/interviews/${interviewId}/start`}>
+                <Link href={`/call/${interviewId}`}>
                     <VideoIcon />
                     Start Interview
                 </Link>
