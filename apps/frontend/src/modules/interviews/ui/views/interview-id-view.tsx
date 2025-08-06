@@ -4,13 +4,18 @@
 import { useState } from "react";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { InterviewIdViewHeader } from "@/modules/interviews/ui/components/interview-id-view-header";
-import { useRouter } from "next/navigation";
 import { useConfirm } from "@/hooks/use-confirm";
-import { UpdateInterviewDialog } from "../components/update-interview-dialog";
+import { UpdateInterviewDialog } from "@/modules/interviews/ui/components/update-interview-dialog";
+import { UpcomingState } from "@/modules/interviews/ui/components/upcoming-state";
+import { ActiveState } from "../components/active-state";
+import { CancelledState } from "../components/cancelled-state";
+import { ProcessingState } from "../components/processing-state";
+import { CompletedState } from "../components/completed-state";
 
 interface Props {
   interviewId: string;
@@ -51,6 +56,12 @@ export const InterviewIdView = ({ interviewId }: Props) => {
     removeInterview.mutate({ id: interviewId });
   }
 
+  const isUpcoming = data.status === "upcoming";
+  const isCompleted = data.status === "completed";
+  const isCancelled = data.status === "cancelled";
+  const isProcessing = data.status === "processing";
+  const isActive = data.status === "active";
+
   return (
     <>
       <RemoveConfirmationDialog />
@@ -66,6 +77,27 @@ export const InterviewIdView = ({ interviewId }: Props) => {
           onEdit={() => setUpdateDialogOpen(true)}
           onRemove={handleRemoveInterview}
         />
+        {
+          isCompleted && <CompletedState />
+        }
+        {
+          isProcessing && <ProcessingState />
+        }
+        {
+          isCancelled && <CancelledState />
+        }
+        {
+          isActive && <ActiveState
+            interviewId={interviewId}
+          />
+        }
+        {
+          isUpcoming && <UpcomingState 
+            interviewId={interviewId}
+            onCancelInterview={handleRemoveInterview}
+            isCancelling={removeInterview.isPending}
+          />
+        }
       </div>
     </>
   );
