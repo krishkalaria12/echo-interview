@@ -6,6 +6,15 @@ import {
   Recommendation 
 } from "@/db/schemas/interview.schema";
 
+// Helper: treat empty string as undefined for URL fields
+const optionalUrl = z.preprocess((val) => {
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    return trimmed === "" ? undefined : trimmed;
+  }
+  return val;
+}, z.string().url().optional());
+
 // Zod Validation Schemas
 export const interviewInsertSchema = z.object({
     name: z.string().min(1, { message: "Name is required" }),
@@ -18,8 +27,8 @@ export const interviewInsertSchema = z.object({
     // Candidate Information
     resumeUrl: z.string().url({ message: "Valid resume URL is required" }),
     portfolioUrl: z.string().url().optional(),
-    githubUrl: z.string().url().optional(),
-    linkedinUrl: z.string().url().optional(),
+    githubUrl: optionalUrl,
+    linkedinUrl: optionalUrl,
   });
   
 export const interviewUpdateSchema = interviewInsertSchema

@@ -11,6 +11,7 @@ import {
 import { db } from "@/db";
 import { agents, interviews } from "@/db/schemas";
 import { streamVideo } from "@/lib/stream-video";
+import { inngest } from "@/inngest/client";
 
 function verifySignatureWithSDK(body: string, signature: string): boolean {
   return streamVideo.verifyWebhook(body, signature);
@@ -135,6 +136,14 @@ export async function POST(req: NextRequest) {
     if (!updatedInterview) {
       return NextResponse.json({ error: "Interview not found" }, { status: 400 });
     }
+
+    await inngest.send({
+      name: "interviews/processing",
+      data: {
+        interviewId: updatedInterview.id,
+        transcriptUrl: updatedInterview.transcriptUrl,
+      }
+    })
   } else if (eventType === "call.recording_ready") {
     const event = payload as CallRecordingReadyEvent;
     const interviewId = event.call_cid.split(":")[1]; // call_cid is formatted as "type:id"
