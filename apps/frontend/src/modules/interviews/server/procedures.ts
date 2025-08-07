@@ -24,12 +24,12 @@ export const interviewsRouter = createTRPCRouter({
         ]);
 
         const expirationTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
-        const issuedAt = Math.floor(Date.now() / 1000) - 60; // issuedAt
+        const issuedAt = Math.floor(Date.now() / 1000) - 60; // issued at
 
         const token = streamVideo.generateUserToken({
             user_id: ctx.auth.user.id,
             exp: expirationTime,
-            validity_in_seconds: issuedAt,
+            iat: issuedAt,
         });
 
         return token;
@@ -85,14 +85,14 @@ export const interviewsRouter = createTRPCRouter({
                 userId: ctx.auth.user.id,
             }).returning();
 
-            // TODO: Create stream call
+            // Create stream call with proper custom fields
             const call = streamVideo.video.call("default", interview.id);
             await call.create({
                 data: {
                     created_by_id: ctx.auth.user.id,
                     custom: {
-                        meetingId: interview.id,
-                        meetingName: interview.name,
+                        interviewId: interview.id,
+                        interviewName: interview.name,
                     },
                     settings_override: {
                         transcription: {
@@ -112,6 +112,7 @@ export const interviewsRouter = createTRPCRouter({
             const [createdAgent] = await db.insert(agents).values({
                 name: `Interview Agent for ${interview.name}`,
                 userId: ctx.auth.user.id,
+                interviewId: interview.id,
                 instructions: generateInterviewSystemPrompt({
                     interview,
                     candidateName: interview.name,
@@ -119,7 +120,7 @@ export const interviewsRouter = createTRPCRouter({
                 }),
             }).returning();
 
-            // add the agent to the call
+            // add the agent to the call (as Stream user)
             await streamVideo.upsertUsers([
                 {
                     id: createdAgent.id,
