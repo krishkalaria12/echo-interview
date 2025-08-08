@@ -1,6 +1,9 @@
 import { and, eq, not } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs"
 import {
+  MessageNewEvent,
   CallEndedEvent,
   CallRecordingReadyEvent,
   CallSessionParticipantLeftEvent,
@@ -12,6 +15,14 @@ import { db } from "@/db";
 import { agents, interviews } from "@/db/schemas";
 import { streamVideo } from "@/lib/stream-video";
 import { inngest } from "@/inngest/client";
+import { streamChat } from "@/lib/stream-chat";
+import { generateAvatarUri } from "@/lib/avatar";
+import { chatInstructions } from "@/lib/chat-instructions";
+
+const openai = new OpenAI({
+  apiKey: process.env.GEMINI_API_KEY!,
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+});
 
 function verifySignatureWithSDK(body: string, signature: string): boolean {
   return streamVideo.verifyWebhook(body, signature);
@@ -98,14 +109,15 @@ export async function POST(req: NextRequest) {
     });
   } else if (eventType === "call.session_participant_left") {
     const event = payload as CallSessionParticipantLeftEvent;
-    const meetingId = event.call_cid.split(":")[1]; // call_cid is formatted as "type:id"
-  
-    if (!meetingId) {
-      return NextResponse.json({ error: "Missing meetingId" }, { status: 400 });
+    const interviewId = event.call_cid.split(":")[1];
+
+    if (!interviewId) {
+      return NextResponse.json({ error: "Missing interviewId" }, { status: 400 });
     }
-  
-    const call = streamVideo.video.call("default", meetingId);
+
+    const call = streamVideo.video.call("default", interviewId);
     await call.end();
+
   } else if (eventType === "call.session_ended") {
     const event = payload as CallEndedEvent;
     const interviewId = event.call.custom?.interviewId;
@@ -137,13 +149,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Interview not found" }, { status: 400 });
     }
 
-    await inngest.send({
-      name: "interviews/processing",
-      data: {
-        interviewId: updatedInterview.id,
-        transcriptUrl: updatedInterview.transcriptUrl,
-      }
-    })
+    // Avoid duplicate processing events if already completed
+    if (updatedInterview.status !== "completed") {
+      await inngest.send({
+        name: "interviews/processing",
+        data: {
+          interviewId: updatedInterview.id,
+          transcriptUrl: updatedInterview.transcriptUrl,
+        }
+      })
+    }
   } else if (eventType === "call.recording_ready") {
     const event = payload as CallRecordingReadyEvent;
     const interviewId = event.call_cid.split(":")[1]; // call_cid is formatted as "type:id"
@@ -154,6 +169,90 @@ export async function POST(req: NextRequest) {
         recordingUrl: event.call_recording.url,
       })
       .where(eq(interviews.id, interviewId));
+  } else if (eventType == "message.new") {
+    const event = payload as MessageNewEvent;
+    const userId = event.user?.id;
+    const channelId = event.channel_id;
+    const text = event.message?.text ?? "";
+
+    if (!userId || !channelId || !text) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const [existingInterview] = await db
+      .select()
+      .from(interviews)
+      .where(and(eq(interviews.id, channelId), eq(interviews.status, "completed")));
+
+    if (!existingInterview) {
+      return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+    }
+
+    const [existingAgent] = await db
+      .select()
+      .from(agents)
+      .where(eq(agents.interviewId, existingInterview.id));
+
+    if (!existingAgent) {
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+    }
+
+    const channel = streamChat.channel("messaging", channelId);
+    await channel.watch();
+
+    const previousMessages: ChatCompletionMessageParam[] = channel.state.messages
+      .slice(-5)
+      .filter((msg) => !!msg.text && msg.text.trim() !== "")
+      .map<ChatCompletionMessageParam>((message) => ({
+        role: message.user?.id === existingAgent.id ? "assistant" : "user",
+        content: message.text || "",
+      }));
+
+    const instructions = chatInstructions(
+      existingInterview.summary || "",
+      existingAgent.instructions || ""
+    );
+
+    const GPTResponse = await openai.chat.completions.create({
+      messages: [
+        { role: "system", content: instructions },
+        ...previousMessages,
+        { role: "user", content: text },
+      ],
+      model: "gemini-2.5-flash",
+    });
+
+    const GPTResponseText = GPTResponse.choices[0]?.message?.content;
+
+    if (!GPTResponseText) {
+      return NextResponse.json(
+        { error: "No response from model" },
+        { status: 400 }
+      );
+    }
+
+    const avatarUrl = generateAvatarUri({
+      seed: existingAgent.name,
+      variant: "botttsNeutral",
+    });
+
+    await streamChat.upsertUser({
+      id: existingAgent.id,
+      name: existingAgent.name,
+      image: avatarUrl,
+    });
+
+    await channel.sendMessage({
+      text: GPTResponseText,
+      user: {
+        id: existingAgent.id,
+        name: existingAgent.name,
+        image: avatarUrl,
+      },
+    });
   }
 
   return NextResponse.json({ status: "ok" });

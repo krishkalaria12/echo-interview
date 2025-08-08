@@ -31,4 +31,5 @@ export const interviewRelations = relations(interviews, ({ one }) => ({
     fields: [interviews.id],
     references: [agents.interviewId],
   }),
+  // analysis kept inline on interviews again
 }));
