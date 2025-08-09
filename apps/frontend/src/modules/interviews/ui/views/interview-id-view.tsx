@@ -77,9 +77,7 @@ export const InterviewIdView = ({ interviewId }: Props) => {
           onEdit={() => setUpdateDialogOpen(true)}
           onRemove={handleRemoveInterview}
         />
-        {
-          isCompleted && <CompletedState />
-        }
+        {isCompleted && <CompletedState data={data} />}
         {
           isProcessing && <ProcessingState />
         }

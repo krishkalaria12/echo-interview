@@ -71,6 +71,8 @@ export const interviews = pgTable("interviews", {
   improvements: text("improvements"), // AI-generated areas for improvement
   recommendation: recommendation("recommendation"),
   summary: text("summary"), // Brief summary of the interview
+  // Optional structured analysis JSON string for charts/metrics
+  analysis: text("analysis"),
   
   // Timestamps
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -6,6 +6,7 @@ interface InterviewPromptConfig {
   companyName?: string;
   interviewerName?: string;
   additionalContext?: string;
+  candidateProfileMarkdown?: string; // enriched via LangGraph profile graph
 }
 
 export const generateInterviewSystemPrompt = ({
@@ -13,7 +14,8 @@ export const generateInterviewSystemPrompt = ({
   candidateName,
   companyName = "our company",
   interviewerName = "the interviewer",
-  additionalContext = ""
+  additionalContext = "",
+  candidateProfileMarkdown = ""
 }: InterviewPromptConfig): string => {
   
   const experienceLevelConfig = getExperienceLevelConfig(interview.experienceLevel);
@@ -40,6 +42,8 @@ ${interview.portfolioUrl ? `- **Portfolio**: ${interview.portfolioUrl}` : ''}
 ${interview.githubUrl ? `- **GitHub**: ${interview.githubUrl}` : ''}
 ${interview.linkedinUrl ? `- **LinkedIn**: ${interview.linkedinUrl}` : ''}
 
+${candidateProfileMarkdown ? `### Enriched Candidate Profile\n${candidateProfileMarkdown}` : ''}
+
 ## Experience Level Guidelines - ${interview.experienceLevel.toUpperCase()}
 ${experienceLevelConfig.description}
 
@@ -65,6 +69,13 @@ ${interviewTypeConfig.approach}
 2. Brief overview of the interview format and ${timeAllocation.total}-minute duration
 3. Ask if they have any initial questions about the process
 ${interview.interviewType === 'technical' ? '4. Quick setup check for screen sharing/coding environment' : ''}
+
+Immediately after greeting, do the following in a friendly, concise way:
+- Ask for the candidate’s preferred name and pronunciation (and how they’d like to be addressed).
+- Confirm they can hear you clearly and that their setup is good.
+- Ask for a brief 15–30 second background overview before starting.
+
+Important: You start the conversation. Begin with a brief personalized intro based on the candidate profile. Do not wait for the candidate to speak first. After your intro, ask for their preferred name/pronunciation, confirm audio is clear, and request a short background before moving on.
 
 ### Main Assessment (${timeAllocation.main} minutes)
 ${interviewTypeConfig.mainSectionStructure}
@@ -418,3 +429,25 @@ const getSuccessMetrics = (position: string, level: ExperienceLevel, type: Inter
 
 // Export the main function
 export default generateInterviewSystemPrompt;
+
+export const INTERVIEW_SUMMARY_PROMPT = `
+You are an expert summarizer. You write readable, concise, simple content. You are given a transcript of a meeting and you need to summarize it.
+
+Use the following markdown structure for every output:
+
+### Overview
+Provide a detailed, engaging summary of the session's content. Focus on major features, user workflows, and any key takeaways. Write in a narrative style, using full sentences. Highlight unique or powerful aspects of the product, platform, or discussion.
+
+### Notes
+Break down key content into thematic sections with timestamp ranges. Each section should summarize key points, actions, or demos in bullet format.
+
+Example:
+#### Section Name
+- Main point or demo shown here
+- Another key insight or interaction
+- Follow-up tool or explanation provided
+
+#### Next Section
+- Feature X automatically does Y
+- Mention of integration with Z
+`
