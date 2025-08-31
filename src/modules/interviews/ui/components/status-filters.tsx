@@ -14,52 +14,52 @@ import { InterviewStatus } from "@/modules/interviews/types";
 
 const options = [
   {
-    id: InterviewStatus.UPCOMING,
-    value: InterviewStatus.UPCOMING,
+    id: InterviewStatus.Upcoming,
+    value: InterviewStatus.Upcoming,
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <ClockArrowUpIcon />
-        {InterviewStatus.UPCOMING}
+        {InterviewStatus.Upcoming}
       </div>
     ),
   },
   {
-    id: InterviewStatus.COMPLETED,
-    value: InterviewStatus.COMPLETED,
+    id: InterviewStatus.Completed,
+    value: InterviewStatus.Completed,
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <CircleCheckIcon />
-        {InterviewStatus.COMPLETED}
+        {InterviewStatus.Completed}
       </div>
     ),
   },
   {
-    id: InterviewStatus.ACTIVE,
-    value: InterviewStatus.ACTIVE,
+    id: InterviewStatus.Active,
+    value: InterviewStatus.Active,
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <VideoIcon />
-        {InterviewStatus.ACTIVE}
+        {InterviewStatus.Active}
       </div>
     ),
   },
   {
-    id: InterviewStatus.PROCESSING,
-    value: InterviewStatus.PROCESSING,
+    id: InterviewStatus.Processing,
+    value: InterviewStatus.Processing,
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <LoaderIcon />
-        {InterviewStatus.PROCESSING}
+        {InterviewStatus.Processing}
       </div>
     ),
   },
   {
-    id: InterviewStatus.CANCELLED,
-    value: InterviewStatus.CANCELLED,
+    id: InterviewStatus.Cancelled,
+    value: InterviewStatus.Cancelled,
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <CircleXIcon />
-        {InterviewStatus.CANCELLED}
+        {InterviewStatus.Cancelled}
       </div>
     ),
   },

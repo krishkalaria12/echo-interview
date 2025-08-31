@@ -36,7 +36,6 @@ const AnalysisState = Annotation.Root({
 const model = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
   apiKey: process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY,
-  responseMimeType: "application/json",
 });
 
 async function fetchTranscript(state: typeof AnalysisState.State) {

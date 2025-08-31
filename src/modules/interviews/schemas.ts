@@ -7,13 +7,15 @@ import {
 } from "@/db/schemas/interview.schema";
 
 // Helper: treat empty string as undefined for URL fields
-const optionalUrl = z.preprocess((val) => {
-  if (typeof val === "string") {
-    const trimmed = val.trim();
-    return trimmed === "" ? undefined : trimmed;
+const optionalUrl = z.string().optional().refine((val) => {
+  if (!val || val.trim() === "") return true;
+  try {
+    new URL(val);
+    return true;
+  } catch {
+    return false;
   }
-  return val;
-}, z.string().url().optional());
+}, { message: "Must be a valid URL" });
 
 // Zod Validation Schemas
 export const interviewInsertSchema = z.object({
@@ -21,12 +23,12 @@ export const interviewInsertSchema = z.object({
     position: z.string().min(1, { message: "Position is required" }),
     jobDescription: z.string().optional(),
     experienceLevel: z.enum(["junior", "mid", "senior"] as const satisfies readonly ExperienceLevel[]),
-    interviewType: z.enum(["technical", "behavioral", "system_design", "mixed"] as const satisfies readonly InterviewType[]).default("technical"),
+    interviewType: z.enum(["technical", "behavioral", "system_design", "mixed"] as const satisfies readonly InterviewType[]),
     scheduledFor: z.date().optional(),
     
     // Candidate Information
     resumeUrl: z.string().url({ message: "Valid resume URL is required" }),
-    portfolioUrl: z.string().url().optional(),
+    portfolioUrl: optionalUrl,
     githubUrl: optionalUrl,
     linkedinUrl: optionalUrl,
   });

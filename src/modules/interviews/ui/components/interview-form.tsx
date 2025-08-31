@@ -71,7 +71,7 @@ export const InterviewForm = ({
     })
   );
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof interviewInsertSchema>>({
     resolver: zodResolver(interviewInsertSchema),
     defaultValues: {
       name: initialValues?.name ?? "",
@@ -237,7 +237,7 @@ export const InterviewForm = ({
                 <FormItem>
                   <FormLabel>GitHub URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your GitHub username" {...field} disabled={isPending} />
+                    <Input placeholder="Enter your GitHub username" {...field} value={field.value || ""} disabled={isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -251,7 +251,7 @@ export const InterviewForm = ({
                 <FormItem>
                   <FormLabel>LinkedIn URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your LinkedIn username" {...field} disabled={isPending} />
+                    <Input placeholder="Enter your LinkedIn username" {...field} value={field.value || ""} disabled={isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
