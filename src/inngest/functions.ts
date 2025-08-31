@@ -9,7 +9,6 @@ import type { StreamTranscriptItem } from "@/modules/interviews/types";
 import { INTERVIEW_SUMMARY_PROMPT } from "@/lib/system-prompt";
 import { buildProfile } from "@/ai/profile";
 import { runAnalysis } from "@/ai/analysis";
-import { streamVideo } from "@/lib/stream-video";
 
 const summarizer = createAgent({
     name: "summarizer",
@@ -106,7 +105,15 @@ export const interviewsProfileEnrich = inngest.createFunction(
   { id: "interviews/profile.enrich" },
   { event: "interviews/profile.enrich" },
   async ({ event, step }) => {
-    const { interviewId, resumeUrl, githubUrl, linkedinUrl, portfolioUrl, position, agentId } = event.data as any;
+    const { interviewId, resumeUrl, githubUrl, linkedinUrl, portfolioUrl, position, agentId } = event.data as {
+      interviewId: string;
+      resumeUrl?: string;
+      githubUrl?: string;
+      linkedinUrl?: string;
+      portfolioUrl?: string;
+      position: string;
+      agentId: string;
+    };
     const profile = await step.run("build-profile", async () =>
       buildProfile({ resumeUrl, githubUrl, linkedinUrl, portfolioUrl, position })
     );
@@ -131,8 +138,8 @@ export const interviewsDeepAnalysis = inngest.createFunction(
   { id: "interviews/analysis" },
   { event: "interviews/processing" },
   async ({ event, step }) => {
-    const transcriptUrl = (event.data as any)?.transcriptUrl as string | undefined;
-    const interviewId = (event.data as any)?.interviewId as string | undefined;
+    const transcriptUrl = (event.data as { transcriptUrl?: string })?.transcriptUrl;
+    const interviewId = (event.data as { interviewId?: string })?.interviewId;
     if (!transcriptUrl || !interviewId) return { ok: false };
 
     // Optional: fetch previous summary if exists for comparison
