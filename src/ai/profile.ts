@@ -20,7 +20,7 @@ function toDirectDriveDownload(inputUrl: string): string {
         return `https://drive.google.com/uc?export=download&id=${id}`;
       }
     }
-  } catch (_) {}
+  } catch {}
   return inputUrl;
 }
 
@@ -106,7 +106,7 @@ async function fetchAll(state: typeof ProfileState.State) {
 }
 
 async function synthesizeProfile(state: typeof ProfileState.State) {
-  const { resumeText, githubText, linkedinText, portfolioText, position } = state as any;
+  const { resumeText, githubText, linkedinText, portfolioText, position } = state;
   const rawSegments: Array<{ source: string; text: string }> = [
     { source: "resume", text: resumeText || "" },
     { source: "github", text: githubText || "" },
@@ -158,7 +158,7 @@ export async function buildProfile(inputs: CandidateInputs): Promise<string | nu
     linkedinUrl: inputs.linkedinUrl ?? null,
     portfolioUrl: inputs.portfolioUrl ?? null,
     position: inputs.position,
-  } as Partial<typeof ProfileState.State> as any;
+  } as Partial<typeof ProfileState.State>;
 
   const output = await graph.invoke(initialState, { configurable: { thread_id: nanoid() } });
   return output.profileMarkdown ?? null;

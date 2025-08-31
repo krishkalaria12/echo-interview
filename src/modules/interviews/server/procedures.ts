@@ -240,7 +240,7 @@ export const interviewsRouter = createTRPCRouter({
         .query(async ({ ctx, input }) => {
             const cols = getTableColumns(interviews);
             // Exclude analysis to avoid failures if DB didn't migrate
-            const { analysis, ...safeCols } = cols as typeof cols & { analysis?: unknown };
+            const { analysis: _, ...safeCols } = cols as typeof cols & { analysis?: unknown };
             const [existingInterview] = await db
                 .select({
                     ...safeCols
@@ -276,7 +276,7 @@ export const interviewsRouter = createTRPCRouter({
             const offset = (page - 1) * pageSize;
             
             const cols = getTableColumns(interviews);
-            const { analysis, ...safeCols } = cols as typeof cols & { analysis?: unknown };
+            const { analysis: _, ...safeCols } = cols as typeof cols & { analysis?: unknown };
             const data = await db
                 .select({
                     ...safeCols,

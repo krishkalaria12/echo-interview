@@ -2,7 +2,6 @@ import JSONL from "jsonl-parse-stringify";
 import { Annotation, MemorySaver, StateGraph, START, END } from "@langchain/langgraph";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { nanoid } from "nanoid";
-import { z } from "zod";
 import { InterviewAnalysisOutputSchema } from "@/modules/interviews/analysis/types";
 
 type TranscriptItem = {
@@ -57,7 +56,7 @@ function extractJsonFromText(text: string): string | null {
 }
 
 async function analyze(state: typeof AnalysisState.State) {
-  const { transcriptItems, previousSummary } = state as any;
+  const { transcriptItems, previousSummary } = state;
   // Guard: empty transcript
   if (!transcriptItems || transcriptItems.length === 0) {
     return {
@@ -100,11 +99,11 @@ ${previousSummary || ""}`;
   }
   if (!parsed || !parsed.success) {
     // Fallback: attempt minimal fields
-    let loose: any = {};
+    let loose: Record<string, unknown> = {};
     try { loose = JSON.parse(jsonCandidate); } catch { loose = {}; }
     return {
       overallScore: Number(loose.overallScore) || null,
-      recommendation: (loose.recommendation?.toLowerCase?.() || null) as any,
+      recommendation: (typeof loose.recommendation === 'string' ? loose.recommendation.toLowerCase() : null) as "hire" | "maybe" | "no" | null,
       summary: loose.summary || null,
       strengths: loose.strengths || null,
       improvements: loose.improvements || null,
@@ -143,7 +142,7 @@ export async function runAnalysis(inputs: AnalysisInputs) {
   const initialState = {
     transcriptUrl: inputs.transcriptUrl,
     previousSummary: inputs.previousSummary ?? null,
-  } as Partial<typeof AnalysisState.State> as any;
+  } as Partial<typeof AnalysisState.State>;
 
   const output = await graph.invoke(initialState, { configurable: { thread_id: nanoid() } });
   return output;

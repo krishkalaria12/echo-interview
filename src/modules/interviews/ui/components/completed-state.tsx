@@ -3,7 +3,6 @@ import {
   FileTextIcon,
   BookOpenTextIcon,
   FileVideoIcon,
-  ClockFadingIcon,
 } from "lucide-react";
 import Markdown from "react-markdown";
 
